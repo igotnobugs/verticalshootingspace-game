@@ -37,6 +37,11 @@ inline void Projectile::Update()
 
 	xPos += xDir;
 	yPos += yDir;
+
+	if ((GetPosition().x < borderUpLeft.x || GetPosition().x  > borderBottomRight.x) ||
+		(GetPosition().y < borderUpLeft.y || GetPosition().y > borderBottomRight.y)) {
+		life = false;
+	}
 }
 
 

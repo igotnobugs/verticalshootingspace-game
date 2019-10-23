@@ -15,25 +15,22 @@ public:
 
 Rock::Rock()
 {
-	yDir = 1;
+	mDirection.y = 1;
 	maxSpeed = 5.f;
+	mDamage = 1.f;
 }
 
-inline void Rock::Update()
-{
-	float speed = sqrt(xDir*xDir + yDir * yDir);
-	if (speed > maxSpeed)
-	{
-		xDir *= maxSpeed / speed;
-		yDir *= maxSpeed / speed;
+inline void Rock::Update() {
+	float speed = sqrt(mDirection.x*mDirection.x + mDirection.y * mDirection.y);
+	if (speed > maxSpeed) {
+		mDirection *= maxSpeed / speed;
 	}
 
-	xPos += xDir;
-	yPos += yDir;
+	mPosition += mDirection;
 
-	if ((GetPosition().x < borderUpLeft.x || GetPosition().x  > borderBottomRight.x) ||
-		(GetPosition().y < borderUpLeft.y || GetPosition().y > borderBottomRight.y)) {
-		life = false;
+	if ((mPosition.x < mBorderUpLeft.x || mPosition.x  > mBorderBottomRight.x) ||
+		(mPosition.y < mBorderUpLeft.y || mPosition.y > mBorderBottomRight.y)) {
+		mLife = false;
 	}
 }
 

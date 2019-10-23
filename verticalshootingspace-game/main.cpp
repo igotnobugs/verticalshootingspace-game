@@ -11,6 +11,13 @@ using namespace sf;
 const int GRID_SIZE = 32;
 const int PLAYABLE_SIZE = 15; 
 
+bool isCollide(Entity *a, Entity *b)
+{
+	return (b->mPosition.x - a->mPosition.x)*(b->mPosition.x - a->mPosition.x) +
+		(b->mPosition.y - a->mPosition.y)*(b->mPosition.y - a->mPosition.y) <
+		(a->mRadius + b->mRadius)*(a->mRadius + b->mRadius);
+}
+
 int main()
 {
 	srand(time(NULL));
@@ -54,9 +61,10 @@ int main()
 
 	//Set default objects
 	Rock greyRock;	greyRock.SetSprite(rock, 32, 32);
-	greyRock.name = "greyRock";
-	greyRock.borderUpLeft = borderUpLeft;
-	greyRock.borderBottomRight = borderBottomRight;
+	greyRock.mName = "greyRock";
+	greyRock.mRadius = 32;
+	greyRock.mBorderUpLeft = borderUpLeft;
+	greyRock.mBorderBottomRight = borderBottomRight;
 
 	//Instatiate objects
 	std::list<Entity*> entities; //List for all entities on the game
@@ -64,17 +72,24 @@ int main()
 
 	//Settings for the objects
 	float xCenter = (float)windowWidth / 2; float yCenter = (float)windowHeight / 2;
-	blueShip->name = "Player";
+	blueShip->mName = "Player";
 	blueShip->SetSprite(shipSprite, 16, 16);
-	blueShip->Settings(xCenter, yCenter);
-	blueShip->borderUpLeft = borderUpLeft;
-	blueShip->borderBottomRight = borderBottomRight;
+	blueShip->mRadius = 16;
+	blueShip->Settings(Vector2f(xCenter, yCenter));
+	blueShip->mBorderUpLeft = borderUpLeft;
+	blueShip->mBorderBottomRight = borderBottomRight;
 	entities.push_back(blueShip);
 
-	Clock clock;
+	Clock deltaClock;
+	Clock rockClock;
+	Clock shootClock;
+
+	float shootCooldown = 0;
 	//Game Loop
 	while (window.isOpen()) {
-		Time currentTime = clock.getElapsedTime();
+		Time deltaTime = deltaClock.restart();
+		Time rockCurrentTime = rockClock.getElapsedTime();
+		Time shootCurrentTime = rockClock.getElapsedTime();
 
 		Event e;
 		while (window.pollEvent(e))
@@ -87,34 +102,60 @@ int main()
 				if (e.key.code == Keyboard::Escape) window.close(); 
 		}
 
-		if (Keyboard::isKeyPressed(Keyboard::Space)) {
+		if (shootCooldown > 0) {
+			shootCooldown -= deltaTime.asSeconds();
+		}
+
+		if ((Keyboard::isKeyPressed(Keyboard::Space)) && shootCooldown <= 0){
 			Projectile *bullet = new Projectile;
-			bullet->name = "bullet";
-			bullet->SetSprite(lineBullet, 0, 0);
-			bullet->Settings(blueShip->xPos, blueShip->yPos, blueShip->angle - 90);
+			bullet->mName = "bullet";
+			bullet->SetSprite(lineBullet, 4, 4);
+			bullet->mRadius = 4;
+			bullet->Settings(Vector2f(blueShip->mPosition.x, blueShip->mPosition.y), blueShip->mAngle);
+			bullet->mShootDirection = -90;
+			shootCooldown = 0.2f;
 			entities.push_back(bullet);
 		}
 	
-		if (currentTime.asSeconds() >= 2.f) {
+		if (rockCurrentTime.asSeconds() >= 2.f) {
 			//Make a new rock based on greyRock every 2 seconds
 			Rock* newRock = new Rock({ greyRock });
 			float newXPos = (rand() % PLAYABLE_SIZE) + 1; // 1 - 15
 			newXPos = (newXPos * GRID_SIZE) + wallSize;
-			newRock->Settings(newXPos, 0);
+			newRock->Settings(Vector2f(newXPos, 0));
 			entities.push_back(newRock);
-			clock.restart();
+			rockClock.restart();
 		}
 
 		//Update 
 		for (auto i = entities.begin(); i != entities.end();) {
 			Entity *e = *i;
 			e->Update();
-			if (e->life == false) { std::cout << e->name << " deleted and erased." << std::endl; i = entities.erase(i); delete e; }
+			if (e->mLife <= 0) { i = entities.erase(i); delete e; }
 			else i++;
 		}
 
+		//get collision 
+		for (auto a : entities) {
+			for (auto b : entities) {		
+				if (a->mName == "greyRock" && b->mName == "bullet") {
+					if (isCollide(a, b)) {
+						a->mLife -= b->mDamage;
+						b->mLife -= b->mDamage;
+
+					}		
+				}
+				if (a->mName == "Player" && b->mName == "greyRock") {
+					if (isCollide(a, b)) {
+						a->mLife -= b->mDamage;
+						b->mLife -= b->mDamage;
+					}			
+				}
+			}
+		}
+
 		//Shaders
-		shader.setUniform("frag_LightOrigin", Vector2f(blueShip->xPos, blueShip->yPos));
+		shader.setUniform("frag_LightOrigin", blueShip->GetPosition());
 		shader.setUniform("frag_LightColor", Vector3f(0, 128.f, 128.f));
 		
 		//Draw 
@@ -123,7 +164,7 @@ int main()
 		for (auto i : entities) i->Draw(window);
 		window.draw(leftBorder);
 		window.draw(rightBorder);
-		window.display();
+		window.display();	
 	}
 
 

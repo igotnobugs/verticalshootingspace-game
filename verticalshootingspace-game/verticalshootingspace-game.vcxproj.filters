@@ -50,6 +50,9 @@
     <ClInclude Include="class\Rock.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="class\Animation.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">

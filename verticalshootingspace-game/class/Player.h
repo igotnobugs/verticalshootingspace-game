@@ -8,7 +8,6 @@ class Player :
 public:
 	float maxSpeed;
 	float acceleration;
-	Projectile bullet;
 
 	Player();
 	void Controls();
@@ -25,23 +24,23 @@ Player::Player()
 {
 	maxSpeed = 5.f;
 	acceleration = 0.3f;
-	bullet.damage = 5;
 }
 
-inline void Player::Controls() {
+inline void Player::Controls() 
+{
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::W) || sf::Keyboard::isKeyPressed(sf::Keyboard::S)) {
-		if (sf::Keyboard::isKeyPressed(sf::Keyboard::W)) 
-			yDir -= acceleration;
-		else 
-			yDir += acceleration;
+		if (sf::Keyboard::isKeyPressed(sf::Keyboard::W))
+			mDirection.y -= acceleration;
+		else
+			mDirection.y += acceleration;
 		vertical = true;
 	}
 	else vertical = false;
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::A) || sf::Keyboard::isKeyPressed(sf::Keyboard::D)) {
 		if (sf::Keyboard::isKeyPressed(sf::Keyboard::A)) 
-			xDir -= acceleration;
+			mDirection.x -= acceleration;
 		else 
-			xDir += acceleration;
+			mDirection.x += acceleration;
 		horizontal = true;
 	}
 	else horizontal = false;
@@ -52,23 +51,20 @@ inline void Player::Update()
 	Controls();
 
 	if (!vertical) 
-		yDir *= 0.95f;
+		mDirection.y *= 0.95f;
 	if (!horizontal) 
-		xDir *= 0.95f;
+		mDirection.x *= 0.95f;
 
-	float speed = sqrt(xDir*xDir + yDir * yDir);
-	if (speed > maxSpeed)
-	{
-		xDir *= maxSpeed / speed;
-		yDir *= maxSpeed / speed;
+	float speed = sqrt(mDirection.x*mDirection.x + mDirection.y * mDirection.y);
+	if (speed > maxSpeed) {
+		mDirection *= maxSpeed / speed;
 	}
 
-	xPos += xDir;
-	yPos += yDir;
+	mPosition += mDirection;
 
-	if ((GetPosition().x < borderUpLeft.x || GetPosition().x  > borderBottomRight.x) ||
-		(GetPosition().y < borderUpLeft.y || GetPosition().y > borderBottomRight.y)) {
-		life = false;
+	if ((mPosition.x < mBorderUpLeft.x || mPosition.x  > mBorderBottomRight.x) ||
+		(mPosition.y < mBorderUpLeft.y || mPosition.y > mBorderBottomRight.y)) {
+		mLife = false;
 	}
 }
 

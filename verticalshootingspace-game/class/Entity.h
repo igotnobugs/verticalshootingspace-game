@@ -1,23 +1,27 @@
 #pragma once
 #include <math.h>
+#include <iostream>
+#include "class\Animation.h"
 
 class Entity
 {
 public:
-	std::string name;
-	float xPos, yPos, xDir, yDir, R, angle;
-	sf::Vector2f borderUpLeft;
-	sf::Vector2f borderBottomRight;
-	int life;
-	sf::Sprite sprite;
+	std::string mName;
+	int mLife;
+	sf::Vector2f mPosition; sf::Vector2f mDirection;
+	int mDamage;
+	float mRadius, mAngle;
+	sf::Vector2f mBorderUpLeft, mBorderBottomRight;
+	sf::Sprite mSprite;
+	Animation mAnimation;
 
 	Entity();
 	void SetSprite(sf::Sprite & s, float xOrg, float yOrg);
-	void Settings(float xPosition, float yPosition, float angle = 0, float radius = 1);
+	void Settings(sf::Vector2f position, float angle = 0);
 	void Draw(sf::RenderWindow & window, sf::RenderStates states = sf::RenderStates::Default);
 	sf::Vector2f GetPosition();
-	virtual ~Entity();
 	virtual void Update();
+	virtual ~Entity();
 protected:
 	std::list<Entity*> listEntities;
 };
@@ -26,36 +30,39 @@ protected:
 
 Entity::Entity()
 {
-	life = 1;
-	xPos = 0.0f; yPos = 0.0f;
-	xDir = 0.0f; yDir = 0.0f;
-	borderUpLeft.x = 0; borderUpLeft.y = 0;
-	borderBottomRight.x = FLT_MAX; borderBottomRight.y = FLT_MAX;
+	mLife = 1;
+	mPosition.x = 0.f; mPosition.y = 0.f;
+	mDirection.x = 0.f; mDirection.y = 0.f;
+	mBorderUpLeft.x = 0.f; mBorderUpLeft.y = 0.f;
+	mBorderBottomRight.x = FLT_MAX; mBorderBottomRight.y = FLT_MAX;
 }
 
 inline void Entity::SetSprite(sf::Sprite & s, float xOrg, float yOrg)
 {
 	s.setOrigin(xOrg, yOrg);
-	sprite = s;
+	mSprite = s;
 }
 
-inline void Entity::Settings(float xPosition, float yPosition, float angle, float radius)
+inline void Entity::Settings(sf::Vector2f position, float angle)
 {
-	xPos = xPosition; yPos = yPosition;
-	this->angle = angle;
-	R = radius;
+	mPosition = position;
+	mAngle = angle;
 }
 
 inline void Entity::Draw(sf::RenderWindow & window, sf::RenderStates states)
 {
-	sprite.setPosition(xPos, yPos);
-	sprite.setRotation(angle);
-	window.draw(sprite, states);
+	//mAnimation.sprite.setPosition(mPosition.x, mPosition.y);
+	//mAnimation.sprite.setRotation(mAngle + 90);
+	//window.draw(mAnimation.sprite);
+
+	mSprite.setPosition(mPosition.x, mPosition.y);
+	mSprite.setRotation(mAngle);
+	window.draw(mSprite, states);
 }
 
 inline sf::Vector2f Entity::GetPosition()
 {
-	return sf::Vector2f(xPos, yPos);
+	return mPosition;
 }
 
 inline void Entity::Update()
@@ -64,4 +71,5 @@ inline void Entity::Update()
 
 Entity::~Entity()
 {
+	std::cout << mName << " destroyed at Position " << mPosition.x << ", " << mPosition.y << "." << std::endl;
 }

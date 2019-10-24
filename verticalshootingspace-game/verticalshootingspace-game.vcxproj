@@ -146,6 +146,7 @@
     <Image Include="sprites\BlueShip.png" />
     <Image Include="sprites\DarkSpaceBackground.png" />
     <Image Include="sprites\glow.png" />
+    <Image Include="sprites\GreenPersonAnim.png" />
     <Image Include="sprites\LineBullet.png" />
     <Image Include="sprites\Rubble.png" />
   </ItemGroup>

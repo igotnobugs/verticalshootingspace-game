@@ -1,6 +1,6 @@
 #pragma once
 #include <SFML/Graphics/Sprite.hpp>
-#include <vector>
+#include <list>
 
 class Animation
 {
@@ -8,6 +8,7 @@ public:
 	float curFrame, mFrameSpeed;
 	sf::Sprite sprite;
 	std::vector<sf::IntRect> frames;
+	bool isAnimationOn;
 
 	Animation();
 	Animation(sf::Texture &texture, int xPosition, int yPosition, int width, int height, int frameCount, float frameSpeed);
@@ -30,6 +31,7 @@ Animation::Animation(sf::Texture &texture, int xPosition, int yPosition, int wid
 	for (int i = 0; i < frameCount; i++)
 		frames.push_back(sf::IntRect(xPosition + i * width, yPosition, width, height));
 
+	isAnimationOn = true;
 	sprite.setTexture(texture);
 	sprite.setOrigin(width / 2, height / 2);
 	sprite.setTextureRect(frames[0]);

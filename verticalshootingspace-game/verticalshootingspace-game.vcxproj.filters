@@ -36,6 +36,9 @@
     <Image Include="sprites\Rubble.png">
       <Filter>Resource Files</Filter>
     </Image>
+    <Image Include="sprites\GreenPersonAnim.png">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="class\Entity.h">

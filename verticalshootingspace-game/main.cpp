@@ -1,8 +1,11 @@
 #include <SFML/Graphics.hpp>
+#include <iostream>
 #include <list>
+
 #include "class/Player.h"
 #include "class/Rock.h"
-#include <iostream>
+#include "class/Animation.h"
+
 
 using namespace sf;
 
@@ -13,31 +16,39 @@ const int PLAYABLE_SIZE = 15;
 
 bool isCollide(Entity *a, Entity *b)
 {
-	return (b->mPosition.x - a->mPosition.x)*(b->mPosition.x - a->mPosition.x) +
-		(b->mPosition.y - a->mPosition.y)*(b->mPosition.y - a->mPosition.y) <
-		(a->mRadius + b->mRadius)*(a->mRadius + b->mRadius);
+	return (b->GetPosition().x - a->GetPosition().x)*(b->GetPosition().x - a->GetPosition().x) +
+		(b->GetPosition().y - a->GetPosition().y)*(b->GetPosition().y - a->GetPosition().y) <
+		(a->GetRadius() + b->GetRadius())*(a->GetRadius() + b->GetRadius());
 }
 
 int main()
 {
 	srand(time(NULL));
 	int windowWidth = 720; int windowHeight = 720;
+
+	View view;
 	VideoMode desktop = VideoMode::getDesktopMode();
-	RenderWindow window(VideoMode(windowWidth, windowHeight, desktop.bitsPerPixel), "verticalshootingspace-game!");
+	int resFix = desktop.bitsPerPixel * 32; // Fix later
+	view.reset(FloatRect(0, 0, (float)windowWidth, (float)windowHeight));
+	RenderWindow window(VideoMode(windowWidth + resFix, windowHeight + resFix, desktop.bitsPerPixel), "verticalshootingspace-game!");
 	window.setFramerateLimit(60);
 
 	//Load textures
-	Texture t1, t2, t3, t4;
+	Texture t1, t2, t3, t4, t5;
 	t1.loadFromFile("sprites/BlueShip.png");
 	t2.loadFromFile("sprites/DarkSpaceBackground.png");	
 	t3.loadFromFile("sprites/LineBullet.png");
 	t4.loadFromFile("sprites/Rubble.png");
+	t5.loadFromFile("sprites/GreenPersonAnim.png");
 
 	//Make sprites from textures
 	Sprite shipSprite(t1);
 	Sprite background(t2);
 	Sprite lineBullet(t3);
 	Sprite rock(t4);
+
+	//Make animations
+	Animation greenPerson(t5, 0, 0, 36, 36, 50, 1);
 
 	//Make Walls
 	float wallSize = (windowWidth - (PLAYABLE_SIZE*GRID_SIZE)) / 2;
@@ -61,24 +72,28 @@ int main()
 
 	//Set default objects
 	Rock greyRock;	greyRock.SetSprite(rock, 32, 32);
-	greyRock.mName = "greyRock";
-	greyRock.mRadius = 32;
-	greyRock.mBorderUpLeft = borderUpLeft;
-	greyRock.mBorderBottomRight = borderBottomRight;
+	greyRock.SetName("greyRock");
+	greyRock.SetRadius(32);
+	greyRock.SetBorder(borderUpLeft, borderBottomRight);
 
 	//Instatiate objects
 	std::list<Entity*> entities; //List for all entities on the game
-	Player* blueShip = new Player; //Player object
+	Player* blueShip = new Player; 
+	Entity* test = new Entity;
 
 	//Settings for the objects
 	float xCenter = (float)windowWidth / 2; float yCenter = (float)windowHeight / 2;
-	blueShip->mName = "Player";
+	blueShip->SetName("Player");
 	blueShip->SetSprite(shipSprite, 16, 16);
-	blueShip->mRadius = 16;
+	blueShip->SetRadius(16);
 	blueShip->Settings(Vector2f(xCenter, yCenter));
-	blueShip->mBorderUpLeft = borderUpLeft;
-	blueShip->mBorderBottomRight = borderBottomRight;
+	blueShip->SetBorder(borderUpLeft, borderBottomRight);
 	entities.push_back(blueShip);
+
+	test->SetAnimation(greenPerson);
+	test->SetPosition(wallSize + 32, windowHeight - 32);
+	test->SetScale(2);
+	entities.push_back(test);
 
 	Clock deltaClock;
 	Clock rockClock;
@@ -106,12 +121,12 @@ int main()
 			shootCooldown -= deltaTime.asSeconds();
 		}
 
-		if ((Keyboard::isKeyPressed(Keyboard::Space)) && shootCooldown <= 0){
+		if ((Keyboard::isKeyPressed(Keyboard::Space)) && shootCooldown <= 0 && blueShip->GetLife() > 0 ){
 			Projectile *bullet = new Projectile;
-			bullet->mName = "bullet";
+			bullet->SetName("bullet");
 			bullet->SetSprite(lineBullet, 4, 4);
-			bullet->mRadius = 4;
-			bullet->Settings(Vector2f(blueShip->mPosition.x, blueShip->mPosition.y), blueShip->mAngle);
+			bullet->SetRadius(4);
+			bullet->Settings(Vector2f(blueShip->GetPosition().x, blueShip->GetPosition().y), blueShip->GetAngle());
 			bullet->mShootDirection = -90;
 			shootCooldown = 0.2f;
 			entities.push_back(bullet);
@@ -128,27 +143,30 @@ int main()
 		}
 
 		//Update 
+		//test.mAnimation->Update();
+		//std::cout << test->mAnimation
 		for (auto i = entities.begin(); i != entities.end();) {
 			Entity *e = *i;
 			e->Update();
-			if (e->mLife <= 0) { i = entities.erase(i); delete e; }
+			if (e->GetLife() <= 0) { i = entities.erase(i); e = nullptr; delete e; }
 			else i++;
 		}
 
 		//get collision 
 		for (auto a : entities) {
 			for (auto b : entities) {		
-				if (a->mName == "greyRock" && b->mName == "bullet") {
+				if (a->GetName() == "greyRock" && b->GetName() == "bullet") {
 					if (isCollide(a, b)) {
-						a->mLife -= b->mDamage;
-						b->mLife -= b->mDamage;
-
+						a->ReduceHp(b->GetDamage());
+						b->ReduceHp(a->GetDamage());
+						std::cout << a->GetName() << " has collided with " << b->GetName() << std::endl;
 					}		
 				}
-				if (a->mName == "Player" && b->mName == "greyRock") {
+				if (a->GetName() == "Player" && b->GetName() == "greyRock") {
 					if (isCollide(a, b)) {
-						a->mLife -= b->mDamage;
-						b->mLife -= b->mDamage;
+						a->ReduceHp(b->GetDamage());
+						b->ReduceHp(a->GetDamage());
+						std::cout << a->GetName() << " has collided with " << b->GetName() << std::endl;
 					}			
 				}
 			}
@@ -160,8 +178,10 @@ int main()
 		
 		//Draw 
 		window.clear(Color::White);
+		window.setView(view);
 		window.draw(background, states);
 		for (auto i : entities) i->Draw(window);
+
 		window.draw(leftBorder);
 		window.draw(rightBorder);
 		window.display();	

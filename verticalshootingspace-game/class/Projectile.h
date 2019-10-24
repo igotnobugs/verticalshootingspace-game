@@ -17,6 +17,7 @@ public:
 
 Projectile::Projectile()
 {
+	std::cout << "Projectile spawned." << std::endl;
 	maxSpeed = 10.f;
 	acceleration = 0.5f;
 	mDamage = 1;

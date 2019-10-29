@@ -1,37 +1,31 @@
 #include <SFML/Graphics.hpp>
 #include <iostream>
 #include <list>
-
 #include "class/Player.h"
 #include "class/Rock.h"
-#include "class/Animation.h"
-
+#include "class/Spritesheet.h"
 
 using namespace sf;
 
-//Version 2.5.1
+//SFML Version 2.5.1
 
-const int GRID_SIZE = 32;
-const int PLAYABLE_SIZE = 15; 
-
-bool isCollide(Entity *a, Entity *b)
-{
-	return (b->GetPosition().x - a->GetPosition().x)*(b->GetPosition().x - a->GetPosition().x) +
-		(b->GetPosition().y - a->GetPosition().y)*(b->GetPosition().y - a->GetPosition().y) <
-		(a->GetRadius() + b->GetRadius())*(a->GetRadius() + b->GetRadius());
-}
+const int GRID_SIZE = 32, PLAYABLE_SIZE = 15; 
+const int WINDOW_WIDTH = 720, WINDOW_HEIGHT = 720;
 
 int main()
 {
 	srand(time(NULL));
-	int windowWidth = 720; int windowHeight = 720;
 
+	//Window Settings
 	View view;
 	VideoMode desktop = VideoMode::getDesktopMode();
-	int resFix = desktop.bitsPerPixel * 32; // Fix later
-	view.reset(FloatRect(0, 0, (float)windowWidth, (float)windowHeight));
-	RenderWindow window(VideoMode(windowWidth + resFix, windowHeight + resFix, desktop.bitsPerPixel), "verticalshootingspace-game!");
-	window.setFramerateLimit(60);
+	std::cout << "Resolution at: " << desktop.bitsPerPixel << std::endl;
+	view.reset(FloatRect(0, 0, (float)WINDOW_WIDTH, (float)WINDOW_HEIGHT));
+	RenderWindow window(VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT, desktop.bitsPerPixel), "verticalshootingspace-game!");
+	window.setFramerateLimit(60); //Will allow remove cap limit later
+
+	//Clock timers
+	Clock deltaClock, rockClock, shootClock;
 
 	//Load textures
 	Texture t1, t2, t3, t4, t5;
@@ -42,62 +36,50 @@ int main()
 	t5.loadFromFile("sprites/GreenPersonAnim.png");
 
 	//Make sprites from textures
-	Sprite shipSprite(t1);
+	Spritesheet greenPerson(t5, 36, 36, 50, 1, 1);
+	Spritesheet shipSprite(t1, 32, 32);
 	Sprite background(t2);
-	Sprite lineBullet(t3);
-	Sprite rock(t4);
+	Sprite lineBullet(t3); lineBullet.setOrigin(4, 4);
+	Sprite rock(t4); rock.setOrigin(32, 32);
 
-	//Make animations
-	Animation greenPerson(t5, 0, 0, 36, 36, 50, 1);
+	//Make Sprite Sheets
+
 
 	//Make Walls
-	float wallSize = (windowWidth - (PLAYABLE_SIZE*GRID_SIZE)) / 2;
+	float wallSize = (WINDOW_WIDTH - (PLAYABLE_SIZE*GRID_SIZE)) / 2;
 	RectangleShape leftBorder, rightBorder;
-	leftBorder.setSize(Vector2f(wallSize, (float)windowHeight));
+	leftBorder.setSize(Vector2f(wallSize, (float)WINDOW_HEIGHT));
 	leftBorder.setFillColor(Color::Black);
 	leftBorder.setPosition(0, 0);
-	rightBorder.setSize(Vector2f(wallSize, (float)windowHeight));
+	rightBorder.setSize(Vector2f(wallSize, (float)WINDOW_HEIGHT));
 	rightBorder.setFillColor(Color::Black);
-	rightBorder.setPosition(windowWidth - wallSize, 0);
+	rightBorder.setPosition(WINDOW_WIDTH - wallSize, 0);
 	Vector2f borderUpLeft(wallSize, 0);
-	Vector2f borderBottomRight(windowWidth - wallSize, windowHeight);
+	Vector2f borderBottomRight(WINDOW_WIDTH - wallSize, WINDOW_HEIGHT);
 
 	//Shaders
 	Shader shader;
 	shader.loadFromFile("shader.frag",Shader::Fragment);
-	shader.setUniform("frag_ScreenResolution", Vector2f((float)windowWidth, (float)windowHeight));
+	shader.setUniform("frag_ScreenResolution", Vector2f((float)WINDOW_WIDTH, (float)WINDOW_HEIGHT));
 	shader.setUniform("frag_LightAttenuation", 50.0f);
 	RenderStates states;
 	states.shader = &shader;
 
 	//Set default objects
-	Rock greyRock;	greyRock.SetSprite(rock, 32, 32);
-	greyRock.SetName("greyRock");
+	Rock greyRock("greyRock", rock, Vector2f(64, 64));
 	greyRock.SetRadius(32);
 	greyRock.SetBorder(borderUpLeft, borderBottomRight);
 
+	float xCenter = (float)WINDOW_WIDTH/2; float yCenter = (float)WINDOW_HEIGHT/2;
 	//Instatiate objects
-	std::list<Entity*> entities; //List for all entities on the game
-	Player* blueShip = new Player; 
-	Entity* test = new Entity;
+	std::list<Object*> objects; //List for all objects on the game
+	Player* blueShip = new Player("Player", shipSprite,	Vector2f(32, 32), Vector2f(xCenter, yCenter));
+	blueShip->SetPoint(up);
 
 	//Settings for the objects
-	float xCenter = (float)windowWidth / 2; float yCenter = (float)windowHeight / 2;
-	blueShip->SetName("Player");
-	blueShip->SetSprite(shipSprite, 16, 16);
 	blueShip->SetRadius(16);
-	blueShip->Settings(Vector2f(xCenter, yCenter));
 	blueShip->SetBorder(borderUpLeft, borderBottomRight);
-	entities.push_back(blueShip);
-
-	test->SetAnimation(greenPerson);
-	test->SetPosition(wallSize + 32, windowHeight - 32);
-	test->SetScale(2);
-	entities.push_back(test);
-
-	Clock deltaClock;
-	Clock rockClock;
-	Clock shootClock;
+	objects.push_back(blueShip);
 
 	float shootCooldown = 0;
 	//Game Loop
@@ -121,15 +103,14 @@ int main()
 			shootCooldown -= deltaTime.asSeconds();
 		}
 
-		if ((Keyboard::isKeyPressed(Keyboard::Space)) && shootCooldown <= 0 && blueShip->GetLife() > 0 ){
-			Projectile *bullet = new Projectile;
-			bullet->SetName("bullet");
-			bullet->SetSprite(lineBullet, 4, 4);
-			bullet->SetRadius(4);
-			bullet->Settings(Vector2f(blueShip->GetPosition().x, blueShip->GetPosition().y), blueShip->GetAngle());
-			bullet->mShootDirection = -90;
+		//get global mouse position
+		blueShip->PointAt(Mouse::getPosition(window));
+
+		if ((Mouse::isButtonPressed(Mouse::Left) || Keyboard::isKeyPressed(Keyboard::Space)) && shootCooldown <= 0 && blueShip->GetLife() > 0 ){
+			Projectile *bullet = new Projectile("bullet", lineBullet, Vector2f(8, 8), blueShip);
 			shootCooldown = 0.2f;
-			entities.push_back(bullet);
+			objects.push_back(bullet);
+			
 		}
 	
 		if (rockCurrentTime.asSeconds() >= 2.f) {
@@ -137,36 +118,37 @@ int main()
 			Rock* newRock = new Rock({ greyRock });
 			float newXPos = (rand() % PLAYABLE_SIZE) + 1; // 1 - 15
 			newXPos = (newXPos * GRID_SIZE) + wallSize;
-			newRock->Settings(Vector2f(newXPos, 0));
-			entities.push_back(newRock);
+			newRock->SetPosition(Vector2f(newXPos, 0));
+			newRock->SetRotation(0);
+			newRock->SetLife(1);
+			objects.push_back(newRock);
 			rockClock.restart();
 		}
 
 		//Update 
-		//test.mAnimation->Update();
-		//std::cout << test->mAnimation
-		for (auto i = entities.begin(); i != entities.end();) {
-			Entity *e = *i;
-			e->Update();
-			if (e->GetLife() <= 0) { i = entities.erase(i); e = nullptr; delete e; }
+		for (auto i = objects.begin(); i != objects.end();) {
+			Object *o = *i;
+			o->Update();
+			if (o->GetLife() <= 0) {
+				i = objects.erase(i);
+				delete o; 
+			}
 			else i++;
 		}
 
-		//get collision 
-		for (auto a : entities) {
-			for (auto b : entities) {		
+		//Find collisions
+		for (auto a : objects) {
+			for (auto b : objects) {
 				if (a->GetName() == "greyRock" && b->GetName() == "bullet") {
-					if (isCollide(a, b)) {
+					if (a->isCollideWith(b)) {
 						a->ReduceHp(b->GetDamage());
 						b->ReduceHp(a->GetDamage());
-						std::cout << a->GetName() << " has collided with " << b->GetName() << std::endl;
 					}		
 				}
 				if (a->GetName() == "Player" && b->GetName() == "greyRock") {
-					if (isCollide(a, b)) {
+					if (a->isCollideWith(b)) {
 						a->ReduceHp(b->GetDamage());
 						b->ReduceHp(a->GetDamage());
-						std::cout << a->GetName() << " has collided with " << b->GetName() << std::endl;
 					}			
 				}
 			}
@@ -180,13 +162,12 @@ int main()
 		window.clear(Color::White);
 		window.setView(view);
 		window.draw(background, states);
-		for (auto i : entities) i->Draw(window);
+		for (auto i : objects) i->Draw(window);
 
 		window.draw(leftBorder);
 		window.draw(rightBorder);
 		window.display();	
 	}
-
 
 	return 0;
 }

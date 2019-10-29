@@ -1,12 +1,12 @@
 #pragma once
-#include "Entity.h"
+#include "Object.h"
+
 class Rock :
-	public Entity
+	public Object
 {
 public:
-	float maxSpeed;
-
 	Rock();
+	Rock(std::string name, sf::Sprite & s, sf::Vector2f size, sf::Vector2f position = sf::Vector2f(0, 0));
 	void Update();
 	virtual ~Rock();
 };
@@ -14,24 +14,24 @@ public:
 
 
 Rock::Rock()
+{	
+}
+
+inline Rock::Rock(std::string name, sf::Sprite & s, sf::Vector2f size, sf::Vector2f position)
 {
-	mDirection.y = 1;
-	maxSpeed = 5.f;
-	mDamage = 1.f;
+	m_Name = name;
+	m_Sprite = s;
+	m_Direction.y = 1;
+	m_MaxSpeed = 5.f;
+	m_Damage = 1.f;
+	m_Shape.setSize(size);
+	m_Shape.setPosition(position);
+	m_Shape.setOrigin(s.getOrigin());
+	m_Shape.setTexture(s.getTexture());
 }
 
 inline void Rock::Update() {
-	float speed = sqrt(mDirection.x*mDirection.x + mDirection.y * mDirection.y);
-	if (speed > maxSpeed) {
-		mDirection *= maxSpeed / speed;
-	}
-
-	mPosition += mDirection;
-
-	if ((mPosition.x < mBorderUpLeft.x || mPosition.x  > mBorderBottomRight.x) ||
-		(mPosition.y < mBorderUpLeft.y || mPosition.y > mBorderBottomRight.y)) {
-		mLife = false;
-	}
+	Object::Update();
 }
 
 

@@ -53,7 +53,10 @@
     <ClInclude Include="class\Rock.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="class\Animation.h">
+    <ClInclude Include="class\Object.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="class\Spritesheet.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

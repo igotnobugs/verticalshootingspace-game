@@ -151,11 +151,12 @@
     <Image Include="sprites\Rubble.png" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="class\Animation.h" />
+    <ClInclude Include="class\Spritesheet.h" />
     <ClInclude Include="class\Entity.h" />
     <ClInclude Include="class\Player.h" />
     <ClInclude Include="class\Projectile.h" />
     <ClInclude Include="class\Rock.h" />
+    <ClInclude Include="class\Object.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

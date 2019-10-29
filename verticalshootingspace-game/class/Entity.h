@@ -1,169 +1,152 @@
 #pragma once
+#define _USE_MATH_DEFINES
 #include <math.h>
 #include <iostream>
-#include "class\Animation.h"
+#include "class\Spritesheet.h"
+
+enum direction { right = 0, down = 90, left = 180, up = 270};
+const float DEGTORAD = M_PI/180;
+const float RADTODEG = 180/M_PI;
+
+//Deals with Shape Transform manipulation
 
 class Entity
 {
 public:
 	Entity();
-	std::string GetName();
-	void SetName(std::string name);
-	int GetLife();
-	void SetLife(int value);
 	sf::Vector2f GetPosition();
 	void SetPosition(float x, float y);
 	void SetPosition(sf::Vector2f position);
-	int GetDamage();
-	void SetDamage(int value);
-	void ReduceHp(int value);
+	float GetRotation();
+	void SetRotation(int value);
+	void SetRotation(sf::Vector2f vectorRotation);
+	float GetFiringPoint(); //Current rotation with point
+	void Rotate(int value);
+	void Rotate(sf::Vector2f rotate);
+	float GetPoint();
+	void SetPoint(float value); 
 	int GetRadius();
 	void SetRadius(int value);
-	int GetAngle();
-	void SetAngle(int value);
-	void SetBorder(sf::Vector2f upperLeftPoint, sf::Vector2f bottomRightPoint);
-	void SetSprite(sf::Sprite & s, float xOrg, float yOrg);
-	void SetAnimation(Animation & animation);
-	void SetScale(int value);
+	void PointAt(sf::Vector2f position);
+	void PointAt(sf::Vector2i position); //Used mostly for pointing at mousePosition
 
-	
-	void Settings(sf::Vector2f position, float angle = 0);
+	void SetBorder(float width, float height); //m_BorderUpLeft is set at (0, 0)
+	void SetBorder(sf::Vector2f upperLeftPoint, sf::Vector2f bottomRightPoint);
 	void Draw(sf::RenderWindow & window, sf::RenderStates states = sf::RenderStates::Default);
 	virtual void Update();
 	virtual ~Entity();
+
 protected:
-	std::string mName;
-	int mLife;
-	sf::Vector2f mPosition; sf::Vector2f mDirection;
-	int mDamage;
-	float mRadius, mAngle;
-	sf::Vector2f mBorderUpLeft, mBorderBottomRight;
-	sf::Sprite mSprite;
-	Animation mAnimation;
+	float m_Size, m_Radius, m_Point;
+	sf::RectangleShape m_Shape;
+	sf::Vector2f m_Direction = sf::Vector2f(0, 0);
+	sf::Vector2f m_BorderUpLeft = sf::Vector2f(FLT_MIN, FLT_MIN);
+	sf::Vector2f m_BorderBottomRight = sf::Vector2f(FLT_MAX, FLT_MAX);
 };
 
 
 
 Entity::Entity()
-{
-	mLife = 1;
-	mPosition.x = 0.f; mPosition.y = 0.f;
-	mDirection.x = 0.f; mDirection.y = 0.f;
-	mBorderUpLeft.x = 0.f; mBorderUpLeft.y = 0.f;
-	mBorderBottomRight.x = FLT_MAX; mBorderBottomRight.y = FLT_MAX;
-}
-
-inline std::string Entity::GetName()
-{
-	return mName;
-}
-
-inline void Entity::SetName(std::string name)
-{
-	mName = name;
-}
-
-inline int Entity::GetLife()
-{
-	return mLife;
-}
-
-inline void Entity::SetLife(int value)
-{
-	mLife = value;
-}
-
-inline void Entity::SetSprite(sf::Sprite & s, float xOrg, float yOrg)
-{
-	s.setOrigin(xOrg, yOrg);
-	mSprite = s;
-}
-
-inline void Entity::SetAnimation(Animation & animation)
-{
-	mAnimation = animation;
-}
-
-inline void Entity::SetScale(int value)
-{
-	mAnimation.sprite.setScale(sf::Vector2f(value, value));
-}
-
-inline void Entity::Settings(sf::Vector2f position, float angle)
-{
-	mPosition = position;
-	mAngle = angle;
+{	
+	m_Shape.setRotation(m_Point);
 }
 
 inline void Entity::Draw(sf::RenderWindow & window, sf::RenderStates states)
 {
-	if (mAnimation.isAnimationOn) {
-		mAnimation.Update();
-		mAnimation.sprite.setPosition(mPosition.x, mPosition.y);
-		mAnimation.sprite.setRotation(mAngle);
-		window.draw(mAnimation.sprite);
-	}
-	else {
-		mSprite.setPosition(mPosition.x, mPosition.y);
-		mSprite.setRotation(mAngle);
-		window.draw(mSprite, states);
-	}
+	window.draw(m_Shape, states);
 }
 
 inline sf::Vector2f Entity::GetPosition()
 {
-	return mPosition;
+	return m_Shape.getPosition();
 }
 
 inline void Entity::SetPosition(float x, float y)
 {
-	mPosition.x = x; mPosition.y = y;
+	m_Shape.setPosition(x, y);
 }
 
 inline void Entity::SetPosition(sf::Vector2f position)
 {
-	mPosition = position;
-}
-
-inline int Entity::GetDamage()
-{
-	return mDamage;
-}
-
-inline void Entity::SetDamage(int value)
-{
-	mDamage = value;
-}
-
-inline void Entity::ReduceHp(int value)
-{
-	mLife -= value;
+	m_Shape.setPosition(position);
 }
 
 inline int Entity::GetRadius()
 {
-	return mRadius;
+	return m_Radius;
 }
 
 inline void Entity::SetRadius(int value)
 {
-	mRadius = value;
+	m_Radius = value;
 }
 
-inline int Entity::GetAngle()
+inline void Entity::PointAt(sf::Vector2f position)
 {
-	return mAngle;
+	sf::Vector2f vectorDirection = position - this->GetPosition();
+	float theta = atan2f(vectorDirection.y, vectorDirection.x);
+	m_Shape.setRotation(theta*RADTODEG);
 }
 
-inline void Entity::SetAngle(int value)
+inline void Entity::PointAt(sf::Vector2i position)
 {
-	mAngle = value;
+	sf::Vector2i vectorDirection = position - sf::Vector2i(this->GetPosition().x, this->GetPosition().y);
+	float theta = atan2f(vectorDirection.y, vectorDirection.x);
+	m_Shape.setRotation((theta*RADTODEG) - m_Point);
+}
+
+inline float Entity::GetRotation()
+{
+	return m_Shape.getRotation();
+}
+
+inline float Entity::GetFiringPoint()
+{
+	return m_Shape.getRotation() + m_Point;
+}
+
+inline void Entity::SetRotation(int value)
+{
+	m_Shape.setRotation(value);
+}
+
+inline void Entity::SetRotation(sf::Vector2f vectorRotation)
+{
+	float theta = atan2f(vectorRotation.y, vectorRotation.x);
+	m_Shape.setRotation(theta*RADTODEG);
+}
+
+inline void Entity::Rotate(int value)
+{
+	m_Shape.rotate(value);
+}
+
+inline void Entity::Rotate(sf::Vector2f rotate)
+{
+	float theta = atan2f(rotate.y, rotate.x);
+	m_Shape.rotate((theta*RADTODEG) + m_Point);
+}
+
+inline float Entity::GetPoint()
+{
+	return m_Point;
+}
+
+inline void Entity::SetPoint(float value)
+{
+	m_Point = value;
 }
 
 inline void Entity::SetBorder(sf::Vector2f upperLeftPoint, sf::Vector2f bottomRightPoint)
 {
-	mBorderUpLeft = upperLeftPoint;
-	mBorderBottomRight = bottomRightPoint;
+	m_BorderUpLeft = upperLeftPoint;
+	m_BorderBottomRight = bottomRightPoint;
+}
+
+inline void Entity::SetBorder(float width, float height)
+{
+	m_BorderUpLeft = sf::Vector2f(0, 0);
+	m_BorderBottomRight = sf::Vector2f(width, height);
 }
 
 inline void Entity::Update()
@@ -172,5 +155,4 @@ inline void Entity::Update()
 
 Entity::~Entity()
 {
-	std::cout << mName << " destroyed at Position " << mPosition.x << ", " << mPosition.y << "." << std::endl;
 }

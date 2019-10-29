@@ -1,46 +1,89 @@
 #pragma once
-#include "class/Entity.h"
+#include "class/Object.h"
 
 class Projectile :
-	public Entity
+	public Object
 {
 public:
-	float maxSpeed, acceleration;
-	float mShootDirection;
-
 	Projectile();
+	Projectile(std::string name, sf::Sprite & s, sf::Vector2f size, sf::Vector2f position = sf::Vector2f(0, 0));
+	Projectile(std::string name, sf::Sprite & s, sf::Vector2f size, Object * firedFromObject);
+	void SetShootDirection(float value);
+	void SetShootDirection(sf::Vector2f vectorDirection);
+	void ShootAt(Object * a);
+	float GetShootDirection();
+
 	void Update();
 	virtual ~Projectile();
+private:
+	float m_ShootDirection = up;
 };
 
 
 
 Projectile::Projectile()
 {
-	std::cout << "Projectile spawned." << std::endl;
-	maxSpeed = 10.f;
-	acceleration = 0.5f;
-	mDamage = 1;
+}
+
+inline Projectile::Projectile(std::string name, sf::Sprite & s, sf::Vector2f size, sf::Vector2f position)
+{
+	m_Name = name;
+	m_Sprite = s;
+	m_Shape.setPosition(position);
+	m_MaxSpeed = 10.f;
+	m_Acceleration = 0.5f;
+	m_Damage = 1;
+	m_Shape.setSize(size);
+	m_Shape.setOrigin(s.getOrigin());
+	m_Shape.setTexture(s.getTexture());
+}
+
+inline Projectile::Projectile(std::string name, sf::Sprite & s, sf::Vector2f size, Object * firedFromObject)
+{
+	m_Name = name;
+	m_Sprite = s;
+	m_MaxSpeed = 10.f;
+	m_Acceleration = 0.5f;
+	m_Damage = 1;
+	m_Shape.setSize(size);
+	m_Shape.setPosition(firedFromObject->GetPosition());
+	m_Shape.setOrigin(s.getOrigin());
+	m_Shape.setTexture(s.getTexture());
+	SetPoint(firedFromObject->GetPoint());
+	SetShootDirection(firedFromObject->GetFiringPoint());
+	SetRotation(firedFromObject->GetRotation());
+}
+
+inline void Projectile::SetShootDirection(float value)
+{
+	m_ShootDirection = value;
+}
+
+inline void Projectile::SetShootDirection(sf::Vector2f vectorDirection)
+{
+	float theta = atan2f(vectorDirection.y , vectorDirection.x);
+	m_ShootDirection = (theta*RADTODEG);
+}
+
+inline void Projectile::ShootAt(Object * a)
+{
+	sf::Vector2f vectorDirection = a->GetPosition() - this->GetPosition();
+	float theta = atan2f(vectorDirection.y, vectorDirection.x);
+	m_ShootDirection = (theta*RADTODEG);
+}
+
+inline float Projectile::GetShootDirection()
+{
+	return m_ShootDirection;
 }
 
 inline void Projectile::Update()
 {
-	float DEGTORAD = 0.017453f;
+	m_Direction.x = cos(m_ShootDirection*DEGTORAD) * 6;
+	m_Direction.y = sin(m_ShootDirection*DEGTORAD) * 6;
 
-	mDirection.x = cos(mShootDirection*DEGTORAD) * 6;
-	mDirection.y = sin(mShootDirection*DEGTORAD) * 6;
 
-	float speed = sqrt(mDirection.x*mDirection.x + mDirection.y * mDirection.y);
-	if (speed > maxSpeed) {
-		mDirection *= maxSpeed / speed;
-	}
-
-	mPosition += mDirection;
-
-	if ((mPosition.x < mBorderUpLeft.x || mPosition.x  > mBorderBottomRight.x) ||
-		(mPosition.y < mBorderUpLeft.y || mPosition.y > mBorderBottomRight.y)) {
-		mLife = false;
-	}
+	Object::Update();
 }
 
 

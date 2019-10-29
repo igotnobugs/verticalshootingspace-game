@@ -29,6 +29,9 @@ public:
 	void SetRadius(int value);
 	void PointAt(sf::Vector2f position);
 	void PointAt(sf::Vector2i position); //Used mostly for pointing at mousePosition
+	void IncrementByUntil(float & toChange, float increment, float max);
+	float lerp(float intial, float final, float t);
+
 
 	void SetBorder(float width, float height); //m_BorderUpLeft is set at (0, 0)
 	void SetBorder(sf::Vector2f upperLeftPoint, sf::Vector2f bottomRightPoint);
@@ -38,8 +41,10 @@ public:
 
 protected:
 	float m_Size, m_Radius, m_Point;
+	float m_Acceleration, m_Speed, m_MaxSpeed; //Acceleration adds to Speed until Speed >= MaxSpeed
 	sf::RectangleShape m_Shape;
-	sf::Vector2f m_Direction = sf::Vector2f(0, 0);
+	sf::Vector2f m_Direction = sf::Vector2f(0, 0); //Unit Vector direction //m_Direction is handled by outside forces
+	sf::Vector2f m_Velocity = sf::Vector2f(0, 0); //m_Direction multipled by a Speed
 	sf::Vector2f m_BorderUpLeft = sf::Vector2f(FLT_MIN, FLT_MIN);
 	sf::Vector2f m_BorderBottomRight = sf::Vector2f(FLT_MAX, FLT_MAX);
 };
@@ -93,6 +98,29 @@ inline void Entity::PointAt(sf::Vector2i position)
 	sf::Vector2i vectorDirection = position - sf::Vector2i(this->GetPosition().x, this->GetPosition().y);
 	float theta = atan2f(vectorDirection.y, vectorDirection.x);
 	m_Shape.setRotation((theta*RADTODEG) - m_Point);
+}
+
+inline void Entity::IncrementByUntil(float & toChange, float increment, float max)
+{
+	//its decreasing
+	if ((toChange > max) && (increment < 0)) {
+		if (toChange > max) {
+			toChange += increment;
+		}
+		else toChange = max;
+	}
+	else {
+		if (toChange > max) {
+			toChange += increment;
+		}
+		else toChange = max;
+	}
+	return;
+}
+
+inline float Entity::lerp(float intial, float final, float t)
+{
+	return (1 - t) * intial + t * final;
 }
 
 inline float Entity::GetRotation()

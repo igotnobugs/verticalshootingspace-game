@@ -52,18 +52,39 @@ inline void Player::Controls()
 		horizontal = true;
 	}
 	else horizontal = false;
+	
 }
 
 inline void Player::Update()
 {
 	Controls();
 
+	//if (m_Direction.y != 0) {
+	//	m_Velocity.y += m_Acceleration * m_Direction.y;
+	//}
+	//else {
+	//	m_Velocity
+	//}
+
+	
 	if (!vertical) 
 		m_Direction.y *= 0.95f;
 	if (!horizontal) 
 		m_Direction.x *= 0.95f;
 
-	Object::Update();
+	//Object::Update();
+
+	if (m_Speed > m_MaxSpeed)
+		m_Direction *= m_MaxSpeed / m_Speed;
+
+
+	m_Shape.move(m_Direction);
+
+	if ((m_Shape.getPosition().x < m_BorderUpLeft.x || m_Shape.getPosition().x  > m_BorderBottomRight.x) ||
+		(m_Shape.getPosition().y < m_BorderUpLeft.y || m_Shape.getPosition().y > m_BorderBottomRight.y)) {
+		m_Life = false;
+	}
+	
 }
 
 

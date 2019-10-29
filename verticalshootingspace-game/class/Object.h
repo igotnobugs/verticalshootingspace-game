@@ -26,9 +26,6 @@ protected:
 	Spritesheet spriteSheet;
 	int m_Life = 1;
 	int m_Damage = 0;
-	float m_Speed = 0;
-	float m_MaxSpeed;
-	float m_Acceleration;
 	sf::Sprite m_Sprite;
 };
 

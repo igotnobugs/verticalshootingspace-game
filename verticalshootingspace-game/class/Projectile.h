@@ -8,13 +8,14 @@ public:
 	Projectile();
 	Projectile(std::string name, sf::Sprite & s, sf::Vector2f size, sf::Vector2f position = sf::Vector2f(0, 0));
 	Projectile(std::string name, sf::Sprite & s, sf::Vector2f size, Object * firedFromObject);
+	virtual ~Projectile();
+	
 	void SetShootDirection(float value);
 	void SetShootDirection(sf::Vector2f vectorDirection);
 	void ShootAt(Object * a);
 	float GetShootDirection();
 
 	void Update();
-	virtual ~Projectile();
 private:
 	float m_ShootDirection = up;
 };
@@ -46,12 +47,16 @@ inline Projectile::Projectile(std::string name, sf::Sprite & s, sf::Vector2f siz
 	m_Acceleration = 0.5f;
 	m_Damage = 1;
 	m_Shape.setSize(size);
-	m_Shape.setPosition(firedFromObject->GetPosition());
+	m_Shape.setPosition(firedFromObject->GetShape().getPosition());
 	m_Shape.setOrigin(s.getOrigin());
 	m_Shape.setTexture(s.getTexture());
 	SetPoint(firedFromObject->GetPoint());
 	SetShootDirection(firedFromObject->GetFiringPoint());
-	SetRotation(firedFromObject->GetRotation());
+	m_Shape.setRotation(firedFromObject->GetShape().getRotation());
+}
+
+Projectile::~Projectile()
+{
 }
 
 inline void Projectile::SetShootDirection(float value)
@@ -67,7 +72,7 @@ inline void Projectile::SetShootDirection(sf::Vector2f vectorDirection)
 
 inline void Projectile::ShootAt(Object * a)
 {
-	sf::Vector2f vectorDirection = a->GetPosition() - this->GetPosition();
+	sf::Vector2f vectorDirection = a->GetShape().getPosition() - m_Shape.getPosition();
 	float theta = atan2f(vectorDirection.y, vectorDirection.x);
 	m_ShootDirection = (theta*RADTODEG);
 }
@@ -84,9 +89,4 @@ inline void Projectile::Update()
 
 
 	Object::Update();
-}
-
-
-Projectile::~Projectile()
-{
 }

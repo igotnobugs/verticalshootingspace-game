@@ -22,7 +22,7 @@ int main()
 	std::cout << "Resolution at: " << desktop.bitsPerPixel << std::endl;
 	view.reset(FloatRect(0, 0, (float)WINDOW_WIDTH, (float)WINDOW_HEIGHT));
 	RenderWindow window(VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT, desktop.bitsPerPixel), "verticalshootingspace-game!");
-	window.setFramerateLimit(60); //Will allow remove cap limit later
+	window.setFramerateLimit(60); 
 
 	//Clock timers
 	Clock deltaClock, rockClock, shootClock;
@@ -67,7 +67,7 @@ int main()
 
 	//Set default objects
 	Rock greyRock("greyRock", rock, Vector2f(64, 64));
-	greyRock.SetRadius(32);
+	//greyRock.SetRadius(32);
 	greyRock.SetBorder(borderUpLeft, borderBottomRight);
 
 	float xCenter = (float)WINDOW_WIDTH/2; float yCenter = (float)WINDOW_HEIGHT/2;
@@ -77,7 +77,7 @@ int main()
 	blueShip->SetPoint(up);
 
 	//Settings for the objects
-	blueShip->SetRadius(16);
+	//blueShip->SetRadius(16);
 	blueShip->SetBorder(borderUpLeft, borderBottomRight);
 	objects.push_back(blueShip);
 
@@ -104,7 +104,9 @@ int main()
 		}
 
 		//get global mouse position
-		blueShip->PointAt(Mouse::getPosition(window));
+		Vector2f mousePos = Vector2f(Mouse::getPosition(window).x, 
+			Mouse::getPosition(window).y);
+		blueShip->PointAt(mousePos);
 
 		if ((Mouse::isButtonPressed(Mouse::Left) || Keyboard::isKeyPressed(Keyboard::Space)) && shootCooldown <= 0 && blueShip->GetLife() > 0 ){
 			Projectile *bullet = new Projectile("bullet", lineBullet, Vector2f(8, 8), blueShip);
@@ -118,8 +120,8 @@ int main()
 			Rock* newRock = new Rock({ greyRock });
 			float newXPos = (rand() % PLAYABLE_SIZE) + 1; // 1 - 15
 			newXPos = (newXPos * GRID_SIZE) + wallSize;
-			newRock->SetPosition(Vector2f(newXPos, 0));
-			newRock->SetRotation(0);
+			newRock->GetShape().setPosition(Vector2f(newXPos, 0));
+			newRock->GetShape().setRotation(0);
 			newRock->SetLife(1);
 			objects.push_back(newRock);
 			rockClock.restart();
@@ -155,7 +157,7 @@ int main()
 		}
 
 		//Shaders
-		shader.setUniform("frag_LightOrigin", blueShip->GetPosition());
+		shader.setUniform("frag_LightOrigin", blueShip->GetShape().getPosition());
 		shader.setUniform("frag_LightColor", Vector3f(0, 128.f, 128.f));
 		
 		//Draw 

@@ -7,8 +7,9 @@ class Rock :
 public:
 	Rock();
 	Rock(std::string name, sf::Sprite & s, sf::Vector2f size, sf::Vector2f position = sf::Vector2f(0, 0));
-	void Update();
 	virtual ~Rock();
+
+	void Update();
 };
 
 
@@ -30,11 +31,10 @@ inline Rock::Rock(std::string name, sf::Sprite & s, sf::Vector2f size, sf::Vecto
 	m_Shape.setTexture(s.getTexture());
 }
 
-inline void Rock::Update() {
-	Object::Update();
-}
-
-
 Rock::~Rock()
 {
+}
+
+inline void Rock::Update() {
+	Object::Update();
 }

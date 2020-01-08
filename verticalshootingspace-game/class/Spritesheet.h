@@ -14,9 +14,10 @@ public:
 	Spritesheet();
 	Spritesheet(sf::Texture &texture, int width, int height, int frameCount = 1, int columns = 1, float frameSpeed = 0.5f);
 	Spritesheet(sf::Texture &texture, sf::Vector2i position, int width, int height, int frameCount = 1, int columns = 1, float frameSpeed = 0.5f);
+	~Spritesheet();
+	
 	void Update();
 	bool IsEnd();
-	~Spritesheet();
 };
 
 
@@ -61,6 +62,10 @@ Spritesheet::Spritesheet(sf::Texture &texture, sf::Vector2i position, int width,
 	sprite.setTextureRect(frames[0]);
 }
 
+Spritesheet::~Spritesheet()
+{
+}
+
 inline void Spritesheet::Update()
 {
 	curFrame += mFrameSpeed;
@@ -72,8 +77,4 @@ inline void Spritesheet::Update()
 inline bool Spritesheet::IsEnd()
 {
 	return curFrame + mFrameSpeed >= frames.size();
-}
-
-Spritesheet::~Spritesheet()
-{
 }

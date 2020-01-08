@@ -8,10 +8,11 @@ class Player :
 public:
 	Player();
 	Player(std::string name, Spritesheet & s, sf::Vector2f size, sf::Vector2f position = sf::Vector2f(0, 0));
-	void Controls();
-	void Update();
 	virtual ~Player();
-
+	
+	void Controls();
+	void Update() override;
+	
 private:
 	bool vertical = false; bool horizontal = false;
 };
@@ -32,6 +33,10 @@ inline Player::Player(std::string name, Spritesheet & s, sf::Vector2f size, sf::
 	m_Shape.setPosition(position);
 	m_Shape.setOrigin(s.sprite.getOrigin());
 	m_Shape.setTexture(s.sprite.getTexture());
+}
+
+Player::~Player()
+{
 }
 
 inline void Player::Controls() 
@@ -80,14 +85,11 @@ inline void Player::Update()
 
 	m_Shape.move(m_Direction);
 
-	if ((m_Shape.getPosition().x < m_BorderUpLeft.x || m_Shape.getPosition().x  > m_BorderBottomRight.x) ||
-		(m_Shape.getPosition().y < m_BorderUpLeft.y || m_Shape.getPosition().y > m_BorderBottomRight.y)) {
+	if ((m_Shape.getPosition().x < m_Border.first.x 
+		|| m_Shape.getPosition().x  > m_Border.second.x)
+		|| (m_Shape.getPosition().y < m_Border.first.y 
+			|| m_Shape.getPosition().y > m_Border.second.y)) {
 		m_Life = false;
 	}
 	
-}
-
-
-Player::~Player()
-{
 }
